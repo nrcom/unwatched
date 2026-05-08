@@ -1,0 +1,12 @@
+.env
+dist/
+.DS_Store
+*.log
+
+# Build artifacts
+frontend/dist/
+backend/dist/
+frontend/.vite/
+frontend/node_modules
+backend/node_modules
+
