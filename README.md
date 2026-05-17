@@ -125,7 +125,7 @@ docker run -d \
 Clone the repo:
 
 ```bash
-git clone https://github.com/nicholasrenard/Unwatched.git
+git clone https://github.com/NRCOM/Unwatched.git
 cd Unwatched
 ```
 
