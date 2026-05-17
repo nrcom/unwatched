@@ -12,6 +12,13 @@
 
 ---
 
+<p align="center">
+    <img src="screenshots/Results-Table.png" alt="Unwatched results table" width="49%" />
+    <img src="screenshots/Drawer-Open.png" alt="Unwatched media detail drawer" width="49%" />
+</p>
+
+---
+
 ## ✨ Features
 
 - **Multi-user watch filtering** — select one or more Plex users; only content unwatched by *all* selected users is returned
@@ -53,37 +60,33 @@ Create a `compose.yml` file anywhere on your server:
 
 ```yaml
 services:
-	unwatched:
-		image: ghcr.io/nrcom/unwatched:latest
-		container_name: unwatched
-		ports:
-			# Host port:container port. Change the left side if you want a different public port.
-			- "3001:3001"
-		environment:
-			# Required service URLs and API keys.
-			TAUTULLI_URL: "https://tautulli.example.com"
-			TAUTULLI_API_KEY: ""
-			RADARR_URL: "https://radarr.example.com"
-			RADARR_API_KEY: ""
-			SONARR_URL: "https://sonarr.example.com"
-			SONARR_API_KEY: ""
-
-			# Public app settings. Keep APP_PORT aligned with the host port above.
-			APP_PORT: "3001"
-			APP_URL: "http://localhost:3001"
-
-			# Internal container settings. Most community users should leave these unchanged.
-			BACKEND_PORT: "3001"
-			BACKEND_PROXY_URL: "http://localhost:3001"
-
-			# Optional Cloudflare Access service token for protected Radarr/Sonarr/Tautulli instances.
-			# Leave blank if Cloudflare Access is not in use.
-			CF_ACCESS_CLIENT_ID: ""
-			CF_ACCESS_CLIENT_SECRET: ""
-
-			# Optional comma-separated Plex usernames to hide from the user selector.
-			EXCLUDED_PLEX_USERS: ""
-		restart: unless-stopped
+    unwatched:
+        image: ghcr.io/nrcom/unwatched:latest
+        container_name: unwatched
+        ports:
+            # Host port:container port. Change the left side if you want a different public port.
+            - "3001:3001"
+        environment:
+            # Required service URLs and API keys.
+            TAUTULLI_URL: "https://tautulli.example.com"
+            TAUTULLI_API_KEY: ""
+            RADARR_URL: "https://radarr.example.com"
+            RADARR_API_KEY: ""
+            SONARR_URL: "https://sonarr.example.com"
+            SONARR_API_KEY: ""
+            # Public app settings. Keep APP_PORT aligned with the host port above.
+            APP_PORT: "3001"
+            APP_URL: "http://localhost:3001"
+            # Internal container settings. Most community users should leave these unchanged.
+            BACKEND_PORT: "3001"
+            BACKEND_PROXY_URL: "http://localhost:3001"
+            # Optional Cloudflare Access service token for protected Radarr/Sonarr/Tautulli instances.
+            # Leave blank if Cloudflare Access is not in use.
+            CF_ACCESS_CLIENT_ID: ""
+            CF_ACCESS_CLIENT_SECRET: ""
+            # Optional comma-separated Plex usernames to hide from the user selector.
+            EXCLUDED_PLEX_USERS: ""
+        restart: unless-stopped
 ```
 
 Then start Unwatched:
