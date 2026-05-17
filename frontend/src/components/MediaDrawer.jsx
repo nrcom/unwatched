@@ -12,6 +12,7 @@ import {
   Rate,
   Descriptions,
   Badge,
+  Modal,
 } from 'antd';
 import {
   YoutubeOutlined,
@@ -51,6 +52,8 @@ function formatDate(iso) {
 export default function MediaDrawer({ item, onClose }) {
   const [detail, setDetail] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [trailerOpen, setTrailerOpen] = useState(false);
+  const [embedBlocked, setEmbedBlocked] = useState(false);
 
   useEffect(() => {
     if (!item) {
@@ -60,6 +63,7 @@ export default function MediaDrawer({ item, onClose }) {
     setDetail(null);
     setLoading(true);
 
+    setEmbedBlocked(false);
     const fetchFn = item.type === 'movie' ? getMovieMetadata : getShowMetadata;
     fetchFn(item.id)
       .then(setDetail)
@@ -67,9 +71,37 @@ export default function MediaDrawer({ item, onClose }) {
       .finally(() => setLoading(false));
   }, [item?.id, item?.type]);
 
+  // Detect YouTube embed-disabled errors (101, 150, 153) via postMessage
+  useEffect(() => {
+    if (!trailerOpen) return;
+    const handler = (e) => {
+      try {
+        const msg = typeof e.data === 'string' ? JSON.parse(e.data) : e.data;
+        if (msg?.event === 'onError' && [100, 101, 150, 153].includes(msg?.info)) {
+          setEmbedBlocked(true);
+        }
+      } catch (_) {}
+    };
+    window.addEventListener('message', handler);
+    return () => window.removeEventListener('message', handler);
+  }, [trailerOpen]);
+
   const data = detail ?? item;
 
-  const youtubeId = data?.youTubeTrailerId;
+  // Radarr can return either a bare video ID or a full YouTube URL
+  function extractYouTubeId(value) {
+    if (!value) return null;
+    try {
+      const url = new URL(value);
+      // youtube.com/watch?v=ID  or  youtu.be/ID
+      return url.searchParams.get('v') ?? url.pathname.replace(/^\//, '') ?? null;
+    } catch (_) {
+      // Not a URL — treat the value itself as the ID
+      return value;
+    }
+  }
+
+  const youtubeId = extractYouTubeId(data?.youTubeTrailerId);
   const youtubeUrl = youtubeId ? `https://www.youtube.com/watch?v=${youtubeId}` : null;
   const youtubeSearchUrl =
     !youtubeId && data
@@ -105,6 +137,69 @@ export default function MediaDrawer({ item, onClose }) {
       }
       destroyOnClose={false}
     >
+      {item && youtubeId && (
+        <Modal
+          open={trailerOpen}
+          onCancel={() => { setTrailerOpen(false); setEmbedBlocked(false); }}
+          footer={null}
+          title={<span style={{ color: '#fff' }}>{data?.title} — Trailer</span>}
+          width={800}
+          centered
+          destroyOnClose
+          styles={{
+            content: { background: '#141414', padding: 0 },
+            header: { background: '#141414', borderBottom: '1px solid #2a2a2a', padding: '12px 20px' },
+            body: { padding: 0 },
+          }}
+        >
+          {embedBlocked ? (
+            <div
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: 12,
+                padding: '48px 24px',
+                color: '#aaa',
+                textAlign: 'center',
+              }}
+            >
+              <YoutubeOutlined style={{ fontSize: 48, color: '#ff4d4f' }} />
+              <span>This video can't be embedded — watch it directly on YouTube.</span>
+              <Button
+                type="primary"
+                danger
+                icon={<YoutubeOutlined />}
+                href={`https://www.youtube.com/watch?v=${youtubeId}`}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Watch on YouTube
+              </Button>
+            </div>
+          ) : (
+            <div style={{ position: 'relative', paddingBottom: '56.25%', height: 0 }}>
+              <iframe
+                src={`https://www.youtube-nocookie.com/embed/${youtubeId}?autoplay=1&rel=0&enablejsapi=1`}
+                title={`${data?.title} trailer`}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+                style={{
+                  position: 'absolute',
+                  top: 0,
+                  left: 0,
+                  width: '100%',
+                  height: '100%',
+                  border: 'none',
+                  borderRadius: '0 0 8px 8px',
+                }}
+              />
+            </div>
+          )}
+        </Modal>
+      )}
+
       {item && (
         <div>
           {/* Hero / Poster */}
@@ -183,10 +278,8 @@ export default function MediaDrawer({ item, onClose }) {
                     type="primary"
                     danger
                     icon={<YoutubeOutlined />}
-                    href={youtubeUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
                     size="small"
+                    onClick={() => setTrailerOpen(true)}
                   >
                     Watch Trailer
                   </Button>

@@ -111,7 +111,7 @@ export default function SearchPanel({ users, genres, onSearch, searching }) {
     <div style={{ padding: '16px 16px 24px' }}>
       <Text
         strong
-        style={{ display: 'block', marginBottom: 16, color: '#e5a00d', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}
+        style={{ display: 'block', marginBottom: 8, color: '#e5a00d', fontSize: 12, letterSpacing: 1, textTransform: 'uppercase' }}
       >
         Search Unwatched
       </Text>
@@ -205,6 +205,7 @@ export default function SearchPanel({ users, genres, onSearch, searching }) {
             step={0.5}
             marks={{ 0: '0', 5: '5', 10: '10' }}
             tooltip={{ formatter: (v) => v }}
+            style={{ marginBottom: -2 }}
           />
         </Form.Item>
 
