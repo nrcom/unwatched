@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import {
   Form,
   Select,
-  Switch,
   Slider,
   Button,
   DatePicker,
@@ -10,9 +9,8 @@ import {
   Space,
   Typography,
   InputNumber,
-  Checkbox,
 } from 'antd';
-import { SearchOutlined, ClearOutlined } from '@ant-design/icons';
+import { SearchOutlined, ClearOutlined, VideoCameraOutlined, DesktopOutlined } from '@ant-design/icons';
 import dayjs from 'dayjs';
 
 const { Text } = Typography;
@@ -142,22 +140,29 @@ export default function SearchPanel({ users, genres, onSearch, searching }) {
 
         {/* Media type toggles */}
         <Form.Item label={<span style={{ color: '#aaa' }}>Media Types</span>}>
-          <Space>
-            <Switch
-              size="small"
-              checked={includeMovies}
-              onChange={setIncludeMovies}
-              checkedChildren="Movies"
-              unCheckedChildren="Movies"
-            />
-            <Switch
-              size="small"
-              checked={includeShows}
-              onChange={setIncludeShows}
-              checkedChildren="Shows"
-              unCheckedChildren="Shows"
-            />
-          </Space>
+          <Space.Compact
+            block
+            style={{ display: 'flex', width: '100%' }}
+          >
+            <Button
+              type={includeMovies ? 'primary' : 'default'}
+              icon={<VideoCameraOutlined />}
+              onClick={() => setIncludeMovies((value) => !value)}
+              aria-pressed={includeMovies}
+              style={{ flex: 1, fontWeight: 600 }}
+            >
+              Movies
+            </Button>
+            <Button
+              type={includeShows ? 'primary' : 'default'}
+              icon={<DesktopOutlined />}
+              onClick={() => setIncludeShows((value) => !value)}
+              aria-pressed={includeShows}
+              style={{ flex: 1, fontWeight: 600 }}
+            >
+              Shows
+            </Button>
+          </Space.Compact>
         </Form.Item>
 
         <Divider style={{ borderColor: '#2a2a2a', margin: '8px 0' }} />

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { Table, Tag, Space, Typography, Empty, Badge, Input, Select } from 'antd';
 import { VideoCameraOutlined, DesktopOutlined, StarFilled, SearchOutlined } from '@ant-design/icons';
+import { genreTagColor } from '../utils/genres';
 
 const { Text } = Typography;
 
@@ -154,7 +155,7 @@ export default function ResultsTable({ data, loading, searched, onRowClick, side
       render: (genres) => (
         <Space size={2} wrap>
           {(genres ?? []).slice(0, 3).map((g) => (
-            <Tag key={g} style={{ fontSize: 11, margin: 0 }}>
+            <Tag key={g} color={genreTagColor(g)} style={{ fontSize: 11, margin: 0 }}>
               {g}
             </Tag>
           ))}

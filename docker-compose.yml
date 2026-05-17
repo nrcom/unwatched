@@ -1,37 +1,33 @@
 services:
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-    networks:
-      - default
+  unwatched:
+    image: ghcr.io/nrcom/unwatched:latest
+    container_name: unwatched
     ports:
-      - "${BACKEND_PORT:-3001}:3001"
-    volumes:
-      - ./backend:/app
-      - /app/node_modules
-    env_file:
-      - .env
+      # Host port:container port. Change the left side if you want a different public port.
+      - "${APP_PORT:-3001}:3001"
     environment:
-      - NODE_ENV=development
-    restart: unless-stopped
+      # Required service URLs and API keys. 
+      # Local IPs or hostnames can be used for services 
+      # running on the same Docker network (e.g. http://192.168.1.100:7878 or http://radarr:7878)
+      TAUTULLI_API_KEY: ""
+      RADARR_URL: "https://radarr.example.com"
+      RADARR_API_KEY: ""
+      SONARR_URL: "https://sonarr.example.com"
+      SONARR_API_KEY: ""
 
-  frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
-    networks:
-      - default
-    ports:
-      - "${FRONTEND_PORT:-5173}:5173"
-    volumes:
-      - ./frontend:/app
-      - /app/node_modules
-    env_file:
-      - .env
-    environment:
-      - VITE_APP_URL=${APP_URL:-http://localhost:5173}
-      - BACKEND_PROXY_URL=http://backend:3001
-    depends_on:
-      - backend
+      # Public app settings. Keep APP_PORT aligned with the host port above.
+      APP_PORT: "3001"
+      APP_URL: "http://localhost:3001"
+
+      # Internal container settings. Most community users should leave these unchanged.
+      BACKEND_PORT: "3001"
+      BACKEND_PROXY_URL: "http://localhost:3001"
+
+      # Optional Cloudflare Access service token for protected Radarr/Sonarr/Tautulli instances.
+      # Leave blank if Cloudflare Access is not in use.
+      CF_ACCESS_CLIENT_ID: ""
+      CF_ACCESS_CLIENT_SECRET: ""
+
+      # Optional comma-separated Plex usernames to hide from the user selector.
+      EXCLUDED_PLEX_USERS: ""
     restart: unless-stopped

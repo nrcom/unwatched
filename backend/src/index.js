@@ -1,4 +1,5 @@
 require('dotenv').config();
+const path = require('path');
 const express = require('express');
 const cors = require('cors');
 
@@ -23,6 +24,14 @@ app.use('/api/genres', genresRouter);
 app.use('/api/search', searchRouter);
 app.use('/api/metadata', metadataRouter);
 app.use('/api/image', imagesRouter);
+
+if (process.env.NODE_ENV === 'production') {
+  const publicDir = path.join(__dirname, '..', 'public');
+  app.use(express.static(publicDir));
+  app.get(/^\/(?!api\/).*/, (_req, res) => {
+    res.sendFile(path.join(publicDir, 'index.html'));
+  });
+}
 
 // Global error handler
 app.use((err, _req, res, _next) => {

@@ -24,7 +24,7 @@
 - **Poster images** — proxied server-side so API keys are never exposed to the browser
 - **Dark mode** — built on Ant Design v5 with a Plex-inspired dark theme throughout
 - **Cloudflare Access support** — optional service token authentication for instances behind Cloudflare Zero Trust
-- **Docker Compose with hot reload** — both frontend (Vite) and backend (nodemon) reload on file save
+- **Single-container deployment** — the production image serves the React frontend and Express API together
 
 ---
 
@@ -35,7 +35,7 @@
 | Frontend | React 18, Vite 5, Ant Design 5 |
 | Backend | Node.js, Express 4, Axios |
 | Data sources | Radarr v3 API, Sonarr v3 API, Tautulli API v2 |
-| Infrastructure | Docker Compose |
+| Infrastructure | Docker, Docker Compose, GHCR |
 
 ---
 
@@ -47,14 +47,86 @@
 - A running **Radarr**, **Sonarr**, and **Tautulli** instance
 - API keys for each service
 
-### 1. Clone the repo
+### Community Install: Docker Compose
+
+Create a `compose.yml` file anywhere on your server:
+
+```yaml
+services:
+	unwatched:
+		image: ghcr.io/nrcom/unwatched:latest
+		container_name: unwatched
+		ports:
+			# Host port:container port. Change the left side if you want a different public port.
+			- "3001:3001"
+		environment:
+			# Required service URLs and API keys.
+			TAUTULLI_URL: "https://tautulli.example.com"
+			TAUTULLI_API_KEY: ""
+			RADARR_URL: "https://radarr.example.com"
+			RADARR_API_KEY: ""
+			SONARR_URL: "https://sonarr.example.com"
+			SONARR_API_KEY: ""
+
+			# Public app settings. Keep APP_PORT aligned with the host port above.
+			APP_PORT: "3001"
+			APP_URL: "http://localhost:3001"
+
+			# Internal container settings. Most community users should leave these unchanged.
+			BACKEND_PORT: "3001"
+			BACKEND_PROXY_URL: "http://localhost:3001"
+
+			# Optional Cloudflare Access service token for protected Radarr/Sonarr/Tautulli instances.
+			# Leave blank if Cloudflare Access is not in use.
+			CF_ACCESS_CLIENT_ID: ""
+			CF_ACCESS_CLIENT_SECRET: ""
+
+			# Optional comma-separated Plex usernames to hide from the user selector.
+			EXCLUDED_PLEX_USERS: ""
+		restart: unless-stopped
+```
+
+Then start Unwatched:
+
+```bash
+docker compose up -d
+```
+
+The app will be available at **http://localhost:3001**. Change the left side of `3001:3001` if you want a different host port.
+
+### Community Install: Docker Run
+
+```bash
+docker run -d \
+	--name unwatched \
+	--restart unless-stopped \
+	-p 3001:3001 \
+	-e TAUTULLI_URL="https://tautulli.example.com" \
+	-e TAUTULLI_API_KEY="" \
+	-e RADARR_URL="https://radarr.example.com" \
+	-e RADARR_API_KEY="" \
+	-e SONARR_URL="https://sonarr.example.com" \
+	-e SONARR_API_KEY="" \
+	-e APP_PORT="3001" \
+	-e BACKEND_PORT="3001" \
+	-e APP_URL="http://localhost:3001" \
+	-e BACKEND_PROXY_URL="http://localhost:3001" \
+	-e CF_ACCESS_CLIENT_ID="" \
+	-e CF_ACCESS_CLIENT_SECRET="" \
+	-e EXCLUDED_PLEX_USERS="" \
+	ghcr.io/nrcom/unwatched:latest
+```
+
+### Developer Install: Clone and Build
+
+Clone the repo:
 
 ```bash
 git clone https://github.com/nicholasrenard/Unwatched.git
 cd Unwatched
 ```
 
-### 2. Configure environment variables
+Configure environment variables:
 
 ```bash
 cp .env.example .env
@@ -62,13 +134,13 @@ cp .env.example .env
 
 Edit `.env` and fill in your values (see [Configuration](#-configuration) below).
 
-### 3. Start with Docker Compose
+Build and start the local development stack:
 
 ```bash
-docker compose up -d --build
+docker compose -f docker-compose.dev.yml up -d --build
 ```
 
-The app will be available at **http://localhost:5173** (or whatever `FRONTEND_PORT` you set).
+The app will be available at **http://localhost:5173** (or whatever `FRONTEND_PORT` you set). The frontend dev server runs on container port `5173` and proxies `/api` to the backend service on container port `3001`.
 
 ---
 
@@ -84,10 +156,11 @@ All configuration is via the `.env` file. Copy `.env.example` to get started.
 | `RADARR_API_KEY` | ✅ | Radarr API key (Settings → General → API Key) |
 | `SONARR_URL` | ✅ | Base URL of your Sonarr instance |
 | `SONARR_API_KEY` | ✅ | Sonarr API key (Settings → General → API Key) |
-| `BACKEND_PORT` | — | Port for the Express backend (default: `3001`) |
-| `FRONTEND_PORT` | — | Port for the Vite frontend (default: `5173`) |
-| `APP_URL` | — | Public URL of the app (default: `http://localhost:5173`) |
-| `BACKEND_PROXY_URL` | — | URL Vite proxies `/api` to; override for non-Docker dev (default: `http://localhost:3001`) |
+| `APP_PORT` | — | Public host port for the Unwatched container (default: `3001`) |
+| `BACKEND_PORT` | — | Port for the Express server inside the container (default: `3001`) |
+| `FRONTEND_PORT` | — | Port for the Vite frontend during local development (default: `5173`) |
+| `APP_URL` | — | Public URL of the app (default: `http://localhost:3001`) |
+| `BACKEND_PROXY_URL` | — | URL Vite proxies `/api` to during local development (default: `http://localhost:3001`) |
 | `CF_ACCESS_CLIENT_ID` | — | Cloudflare Access service token Client ID (optional) |
 | `CF_ACCESS_CLIENT_SECRET` | — | Cloudflare Access service token Client Secret (optional) |
 | `EXCLUDED_PLEX_USERS` | — | Comma-separated usernames to hide from the user selector |
@@ -95,6 +168,10 @@ All configuration is via the `.env` file. Copy `.env.example` to get started.
 ### Cloudflare Access
 
 If your Radarr, Sonarr, or Tautulli instances are protected by Cloudflare Zero Trust, create a **Service Token** in Zero Trust → Access → Service Auth → Service Tokens, then add a **Service Auth** policy to each application that includes the token. Set `CF_ACCESS_CLIENT_ID` and `CF_ACCESS_CLIENT_SECRET` in your `.env`.
+
+### Authentication
+
+Unwatched does not include built-in user authentication. It is intended to run locally or on a private network where access is already controlled. If you need authentication for a remote or shared deployment, place your preferred auth provider, reverse proxy, or access gateway in front of the app.
 
 ---
 
@@ -109,12 +186,18 @@ Results and watch history are cached in memory (10-minute TTL for library data, 
 
 ---
 
-## 🐳 Docker Compose Details
+## 🐳 Container Details
 
-Both services use volume mounts so changes to source files hot-reload without a rebuild:
+The production image is published as `ghcr.io/nrcom/unwatched:latest`. It builds the Vite frontend, copies the static files into the Express backend image, and serves both the web UI and `/api` from one container.
 
-- **Backend** (`./backend`) — nodemon watches `src/**` and restarts on any `.js` or `.json` change
-- **Frontend** (`./frontend`) — Vite HMR handles all React and asset changes instantly
+Docker image names are lowercase, so use `ghcr.io/nrcom/unwatched` in Compose and `docker run` commands even though the GitHub organization is shown as NRCOM.
+
+For maintainers, build and publish a release image from a cloned checkout:
+
+```bash
+docker build -t ghcr.io/nrcom/unwatched:latest .
+docker push ghcr.io/nrcom/unwatched:latest
+```
 
 To restart after changing `.env`:
 
