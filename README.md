@@ -5,8 +5,8 @@
 
 **Unwatched** is a self-hosted dark-mode web app that cross-references your **Radarr**, **Sonarr**, and **Tautulli** libraries to surface movies and TV shows that one or more of your Plex users haven't watched yet.
 
-[![Patreon](https://img.shields.io/badge/Support-Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/NRCOM)
-[![GitHub](https://img.shields.io/badge/GitHub-Unwatched-181717?style=for-the-badge&logo=github)](https://github.com/orgs/NRCOM/Unwatched)
+<!-- [![Patreon](https://img.shields.io/badge/Support-Patreon-FF424D?style=for-the-badge&logo=patreon&logoColor=white)](https://patreon.com/NRCOM) -->
+[![GitHub](https://img.shields.io/badge/GitHub-Unwatched-181717?style=for-the-badge&logo=github)](https://github.com/NRCOM/Unwatched)
 
 </div>
 
