@@ -192,7 +192,9 @@ The production image is published as `ghcr.io/nrcom/unwatched:latest`. It builds
 
 Docker image names are lowercase, so use `ghcr.io/nrcom/unwatched` in Compose and `docker run` commands even though the GitHub organization is shown as NRCOM.
 
-For maintainers, build and publish a release image from a cloned checkout:
+For maintainers, publishing a GitHub Release automatically builds and pushes the container image to GHCR. Stable releases publish both the release tag and `latest`; prereleases publish only the release tag.
+
+To build and publish manually from a cloned checkout:
 
 ```bash
 docker build -t ghcr.io/nrcom/unwatched:latest .
